@@ -1,6 +1,112 @@
 ---
 title: "the_quart"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
 
+```{r}
+rm(list = ls())
+```
+
+```{r}
+# General use packages:
+library(tidyverse)
+library(here)
+library(janitor)
+library(dplyr)
+
+# Specifically for plots:
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+library(corrgram)
+library(cowplot)
+library(magick)
+library(grid)
+
+# And for another dataset we'll explore:
+library(gapminder)
+
+# Spatial
+library(sf)
+
+# other
+library(png)
+library(colordistance)
+```
+
+
+### load in csv
+```{r}
+space_launch <- read_csv(here("data", "space_launches.csv"))
+```
+
+```{r}
+space_launch$launch_date <- mdy(space_launch$launch_date)
+```
+
+
+```{r}
+shit_graph_setup <- space_launch %>% group_by(mission) %>% summarize(mis_count = n())
+```
+
+
+
+
+```{r}
+shit <- ggplot(shit_graph_setup, aes(x = "", y = mis_count, fill = mission)) + geom_col(fill = "yellow", size = 5, alpha = 0) + coord_polar(theta = "y") + theme_minimal() + labs(y = "you've made a big mistake", x = "") + theme(axis.title = element_text(size = 15, color = "red", face = "bold"), plot.background = element_rect(fill = "black"))
+
+```
+
+### image
+```{r}
+my_image <- readPNG("photos/xok2.png", native = TRUE)
+```
+
+### plot + image
+```{r}
+plot_n_image <- shit + inset_element(p = my_image,left = 0, bottom = 0, right = 1, top = 1, on_top = FALSE)
+```
+
+```{r}
+ggsave("oops.png", path = "figs")
+```
+
+### i hate this
+```{r}
+san_fran <- read_csv(here("data", "San_Francisco_Communitywide_Greenhouse_Gas_Inventory.csv"))
+```
+
+```{r}
+san_fran <- san_fran %>% clean_names
+```
+
+```{r}
+san_fran_emit <- san_fran %>% group_by(sector_general) %>% summarize(tot_ann_ghg = sum(emissions_mt_co2e, na.rm = TRUE))
+```
+
+```{r}
+san_fran_emit2 <- san_fran %>% group_by(calendar_year, commodity_type) %>% summarize(tot_ann_ghg_yr_cmd = sum(emissions_mt_co2e, na.rm = TRUE))
+```
+
+```{r}
+san_fran_emit3 <- san_fran %>% filter(calendar_year >= 2005 & grepl("PG&E", sector_detail2, fixed = TRUE) == TRUE) %>% select(calendar_year, sector_detail2, emissions_mt_co2e)
+```
+
+```{r}
+san_fran_final <- san_fran %>% group_by(quantity_units) %>% summarize(count = n())
+```
+
+
+```{r}
+ggplot(san_fran_final, aes(x = fct_reorder(quantity_units, count, .desc = TRUE), y = count)) + geom_col() + labs(x = "", y = "Number of Occurances", title = "How Many Times this Dataset Used a Unit of Measurement")
+```
+
+```{r}
+ggsave("units.png", path = "figs", height = 5, width = 8)
+```
 
